@@ -1,0 +1,47 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model League {
+  slug          String  @id
+  name          String
+  divisionCode  String  @unique @map("division_code")
+  currentSeason String  @map("current_season")
+  matches       Match[]
+
+  @@map("leagues")
+}
+
+model Team {
+  slug        String  @id
+  name        String
+  homeMatches Match[] @relation("homeTeam")
+  awayMatches Match[] @relation("awayTeam")
+
+  @@map("teams")
+}
+
+model Match {
+  id           Int      @id @default(autoincrement())
+  leagueSlug   String   @map("league_slug")
+  season       String
+  date         DateTime @db.Date
+  homeTeamSlug String   @map("home_team_slug")
+  awayTeamSlug String   @map("away_team_slug")
+  homeGoals    Int      @map("home_goals")
+  awayGoals    Int      @map("away_goals")
+
+  league   League @relation(fields: [leagueSlug], references: [slug], onDelete: Cascade)
+  homeTeam Team   @relation("homeTeam", fields: [homeTeamSlug], references: [slug])
+  awayTeam Team   @relation("awayTeam", fields: [awayTeamSlug], references: [slug])
+
+  @@unique([leagueSlug, season, homeTeamSlug, awayTeamSlug])
+  @@map("matches")
+}

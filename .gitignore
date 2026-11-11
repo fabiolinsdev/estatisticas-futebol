@@ -2,6 +2,7 @@ node_modules/
 dist/
 coverage/
 .vercel/
+packages/db/src/generated/
 
 .env
 .env.*

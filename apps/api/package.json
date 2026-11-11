@@ -1,0 +1,12 @@
+{
+  "name": "@estatisticas/api",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@estatisticas/db": "*",
+    "fastify": "^5.12.8"
+  }
+}

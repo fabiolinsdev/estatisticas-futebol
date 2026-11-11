@@ -1,0 +1,24 @@
+{
+  "name": "estatisticas-futebol",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "postinstall": "npm run generate -w @estatisticas/db",
+    "db:up": "docker compose up -d --wait",
+    "db:migrate": "npm run migrate -w @estatisticas/db",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

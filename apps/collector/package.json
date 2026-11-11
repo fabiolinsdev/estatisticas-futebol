@@ -1,0 +1,12 @@
+{
+  "name": "@estatisticas/collector",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@estatisticas/db": "*",
+    "csv-parse": "^7.0.3"
+  }
+}
