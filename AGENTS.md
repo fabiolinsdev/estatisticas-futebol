@@ -2,6 +2,10 @@
 
 Coletor e API REST de estatísticas (gols, chutes ao gol, cartões) das cinco principais ligas europeias. Vocabulário do domínio em `GLOSSARY.md`; decisões de arquitetura em `docs/adr/`.
 
+## Decisões
+
+Não tome decisões de design ou de produto sozinho. Toda decisão que o mantenedor ainda não tomou (regra de domínio, contrato da API, comportamento em caso de erro, infraestrutura) deve ser perguntada antes de entrar em código, spec, issue ou documentação.
+
 ## Agent skills
 
 ### Issue tracker
