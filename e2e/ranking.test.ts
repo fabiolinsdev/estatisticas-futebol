@@ -134,14 +134,18 @@ describe("ranking de uma Liga", () => {
   it("falha a coleta da Liga quando o arquivo é de outra divisão, sem gravar nada", async () => {
     const collecting = ingest({
       db,
-      source: fakeSource({ SP1: "E0-sample.csv" }),
+      source: fakeSource({ E0: "E0-sample.csv", SP1: "E0-sample.csv" }),
       season: "2026/27",
     });
 
-    await expect(collecting).rejects.toThrow('Divisão errada no CSV: esperada "SP1", encontrada "E0"');
+    await expect(collecting).rejects.toThrow(
+      'la-liga: Divisão errada no CSV: esperada "SP1", encontrada "E0"',
+    );
 
-    const response = await get(db, "/leagues/la-liga/rankings?metric=goalsFor");
-    expect(response.status).toBe(404);
+    const laLiga = await get(db, "/leagues/la-liga/rankings?metric=goalsFor");
+    expect(laLiga.status).toBe(404);
+    const premierLeague = await get(db, "/leagues/premier-league/rankings?metric=goalsFor");
+    expect(premierLeague.body.data).toHaveLength(2);
   });
 
   it("falha a coleta da Liga quando o placar não é um número, sem gravar nada", async () => {
@@ -155,6 +159,8 @@ describe("ranking de uma Liga", () => {
 
     const response = await get(db, "/leagues/premier-league/rankings?metric=goalsFor");
     expect(response.status).toBe(404);
-    expect(response.body.message).toBe('Liga inexistente: "premier-league".');
+    expect(response.body.message).toBe(
+      'Liga inexistente: "premier-league". Use la-liga, serie-a, bundesliga ou ligue-1.',
+    );
   });
 });
