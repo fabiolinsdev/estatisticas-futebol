@@ -1,37 +1,35 @@
 import { type Db, Prisma } from "@estatisticas/db";
-
-const columnsByMetric = {
-  goalsFor: { home: "home_goals", away: "away_goals" },
-  goalsAgainst: { home: "away_goals", away: "home_goals" },
-  shotsOnTarget: { home: "home_shots_on_target", away: "away_shots_on_target" },
-  yellowCards: { home: "home_yellow_cards", away: "away_yellow_cards" },
-  redCards: { home: "home_red_cards", away: "away_red_cards" },
-} as const;
-
-export type Metric = keyof typeof columnsByMetric;
-export const metrics = Object.keys(columnsByMetric) as Metric[];
+import {
+  currentSeasonMatches,
+  type Metric,
+  metricColumn,
+  type Side,
+  teamColumn,
+} from "./season-matches.ts";
 
 export const orders = ["desc", "asc"] as const;
 export type Order = (typeof orders)[number];
 
+export const venues = ["all", "home", "away"] as const;
+export type Venue = (typeof venues)[number];
+
+const sidesByVenue: Record<Venue, Side[]> = { all: ["home", "away"], home: ["home"], away: ["away"] };
+
 type RankingRow = { slug: string; name: string; matches: number; total: number; average: number };
 
-export async function ranking(db: Db, leagueSlug: string, metric: Metric, order: Order) {
-  const home = Prisma.raw(columnsByMetric[metric].home);
-  const away = Prisma.raw(columnsByMetric[metric].away);
+type RankingQuery = { metric: Metric; order: Order; venue: Venue };
+
+export async function ranking(db: Db, leagueSlug: string, { metric, order, venue }: RankingQuery) {
   const direction = Prisma.raw(order === "asc" ? "ASC" : "DESC");
+  const valuesBySide = sidesByVenue[venue].map(
+    (side) => Prisma.sql`
+      SELECT ${teamColumn(side)} AS team_slug, ${metricColumn(metric, side)} AS value
+      FROM current_season_matches
+    `,
+  );
   const rows = await db.$queryRaw<RankingRow[]>`
-    WITH current_season_matches AS (
-      SELECT m.*
-      FROM matches m
-      JOIN leagues l ON l.slug = m.league_slug AND l.current_season = m.season
-      WHERE l.slug = ${leagueSlug}
-    ),
-    team_matches AS (
-      SELECT home_team_slug AS team_slug, ${home} AS value FROM current_season_matches
-      UNION ALL
-      SELECT away_team_slug, ${away} FROM current_season_matches
-    )
+    WITH current_season_matches AS (${currentSeasonMatches(leagueSlug)}),
+    team_matches AS (${Prisma.join(valuesBySide, " UNION ALL ")})
     SELECT
       t.slug,
       t.name,
