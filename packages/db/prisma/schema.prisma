@@ -14,6 +14,7 @@ model League {
   name          String
   divisionCode  String  @unique @map("division_code")
   currentSeason String  @map("current_season")
+  position      Int
   matches       Match[]
 
   @@map("leagues")
@@ -37,6 +38,12 @@ model Match {
   awayTeamSlug String   @map("away_team_slug")
   homeGoals    Int      @map("home_goals")
   awayGoals    Int      @map("away_goals")
+  homeShotsOnTarget Int @map("home_shots_on_target")
+  awayShotsOnTarget Int @map("away_shots_on_target")
+  homeYellowCards   Int @map("home_yellow_cards")
+  awayYellowCards   Int @map("away_yellow_cards")
+  homeRedCards      Int @map("home_red_cards")
+  awayRedCards      Int @map("away_red_cards")
 
   league   League @relation(fields: [leagueSlug], references: [slug], onDelete: Cascade)
   homeTeam Team   @relation("homeTeam", fields: [homeTeamSlug], references: [slug])
