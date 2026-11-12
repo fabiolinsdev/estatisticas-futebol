@@ -13,19 +13,28 @@ type Row = Record<string, string>;
 
 export function parseMatches(csv: string): ParsedMatch[] {
   const rows: Row[] = parse(csv, { bom: true, columns: true, skip_empty_lines: true });
-  return rows.map((row) => ({
+  return rows.filter(hasScore).map((row) => ({
     date: parseDate(column(row, "Date")),
     homeTeam: teamFromSourceName(column(row, "HomeTeam")),
     awayTeam: teamFromSourceName(column(row, "AwayTeam")),
-    homeGoals: Number(column(row, "FTHG")),
-    awayGoals: Number(column(row, "FTAG")),
+    homeGoals: parseGoals(column(row, "FTHG")),
+    awayGoals: parseGoals(column(row, "FTAG")),
   }));
+}
+
+function hasScore(row: Row): boolean {
+  return column(row, "FTHG") !== "" && column(row, "FTAG") !== "";
 }
 
 function column(row: Row, name: string): string {
   const value = row[name];
   if (value === undefined) throw new Error(`Coluna ausente no CSV: ${name}`);
   return value;
+}
+
+function parseGoals(value: string): number {
+  if (!/^\d+$/.test(value)) throw new Error(`Placar inválido no CSV: "${value}"`);
+  return Number(value);
 }
 
 function parseDate(value: string): Date {

@@ -4,6 +4,7 @@ export type Team = {
 };
 
 const teamsBySourceName: Record<string, Team> = {
+  Arsenal: { slug: "arsenal", name: "Arsenal" },
   "Aston Villa": { slug: "aston-villa", name: "Aston Villa" },
   "Man United": { slug: "manchester-united", name: "Manchester United" },
 };
