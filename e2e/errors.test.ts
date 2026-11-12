@@ -51,4 +51,13 @@ describe("erros do ranking", () => {
         'Liga inexistente: "mls". Use premier-league, la-liga, serie-a, bundesliga ou ligue-1.',
     });
   });
+
+  it("responde 404 sem listar Ligas quando nenhuma foi coletada ainda", async () => {
+    await resetDatabase(db);
+
+    const response = await get(db, "/leagues/mls/rankings?metric=goalsFor");
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Liga inexistente: "mls".');
+  });
 });

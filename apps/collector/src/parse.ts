@@ -1,5 +1,6 @@
 import { parse } from "csv-parse/sync";
-import { type Team, teamFromSourceName } from "./teams.ts";
+import type { League } from "./leagues.ts";
+import type { Team, TeamsBySourceName } from "./teams.ts";
 
 export type ParsedMatch = {
   date: Date;
@@ -17,18 +18,28 @@ export type ParsedMatch = {
 
 type Row = Record<string, string>;
 
-export function parseMatches(csv: string, divisionCode: string): ParsedMatch[] {
+export function parseMatches(
+  csv: string,
+  league: League,
+  teams: TeamsBySourceName,
+): ParsedMatch[] {
   const rows: Row[] = parse(csv, { bom: true, columns: true, skip_empty_lines: true });
   for (const row of rows) {
     const division = column(row, "Div");
-    if (division !== divisionCode) {
-      throw new Error(`Divisão errada no CSV: esperada "${divisionCode}", encontrada "${division}"`);
+    if (division !== league.divisionCode) {
+      throw new Error(
+        `Divisão errada no CSV: esperada "${league.divisionCode}", encontrada "${division}"`,
+      );
     }
   }
-  return rows.filter(hasScore).map((row) => ({
+
+  const playedRows = rows.filter(hasScore);
+  ensureTeamsAreKnown(teams, playedRows);
+  const teamOf = (row: Row, side: "HomeTeam" | "AwayTeam") => teams[column(row, side)] as Team;
+  return playedRows.map((row) => ({
     date: parseDate(column(row, "Date")),
-    homeTeam: teamFromSourceName(column(row, "HomeTeam")),
-    awayTeam: teamFromSourceName(column(row, "AwayTeam")),
+    homeTeam: teamOf(row, "HomeTeam"),
+    awayTeam: teamOf(row, "AwayTeam"),
     homeGoals: parseGoals(column(row, "FTHG")),
     awayGoals: parseGoals(column(row, "FTAG")),
     homeShotsOnTarget: parseStat(row, "HST"),
@@ -38,6 +49,15 @@ export function parseMatches(csv: string, divisionCode: string): ParsedMatch[] {
     homeRedCards: parseStat(row, "HR"),
     awayRedCards: parseStat(row, "AR"),
   }));
+}
+
+function ensureTeamsAreKnown(teams: TeamsBySourceName, rows: Row[]) {
+  const sourceNames = rows.flatMap((row) => [column(row, "HomeTeam"), column(row, "AwayTeam")]);
+  const unknown = new Set(sourceNames.filter((name) => !Object.hasOwn(teams, name)));
+  if (unknown.size > 0) {
+    const names = [...unknown].map((name) => `"${name}"`).join(", ");
+    throw new Error(`Times desconhecidos na fonte: ${names}`);
+  }
 }
 
 function hasScore(row: Row): boolean {

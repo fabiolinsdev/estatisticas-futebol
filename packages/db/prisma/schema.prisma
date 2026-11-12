@@ -16,17 +16,31 @@ model League {
   currentSeason String  @map("current_season")
   position      Int
   matches       Match[]
+  teamSeasons   TeamSeason[]
 
   @@map("leagues")
 }
 
 model Team {
-  slug        String  @id
+  slug        String       @id
   name        String
-  homeMatches Match[] @relation("homeTeam")
-  awayMatches Match[] @relation("awayTeam")
+  homeMatches Match[]      @relation("homeTeam")
+  awayMatches Match[]      @relation("awayTeam")
+  teamSeasons TeamSeason[]
 
   @@map("teams")
+}
+
+model TeamSeason {
+  leagueSlug String @map("league_slug")
+  season     String
+  teamSlug   String @map("team_slug")
+
+  league League @relation(fields: [leagueSlug], references: [slug], onDelete: Cascade)
+  team   Team   @relation(fields: [teamSlug], references: [slug])
+
+  @@id([leagueSlug, season, teamSlug])
+  @@map("team_seasons")
 }
 
 model Match {
