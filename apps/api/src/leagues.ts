@@ -16,7 +16,7 @@ export async function leagueSlugs(db: Db) {
   return leagues.map((league) => league.slug);
 }
 
-type CurrentLeague = { slug: string; currentSeason: string };
+export type CurrentLeague = { slug: string; currentSeason: string };
 
 export async function findParticipatingTeam(db: Db, league: CurrentLeague, teamSlug: string) {
   const participation = await db.teamSeason.findUnique({
