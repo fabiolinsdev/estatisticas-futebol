@@ -20,6 +20,10 @@ _Avoid_: Temporada corrente, temporada vigente
 Um jogo entre dois Times, dentro de uma Temporada de uma Liga, disputado até o apito final. Partidas adiadas só contam depois de disputadas. Partidas abandonadas ou decididas fora de campo (W.O., decisão de tribunal) não contam.
 _Avoid_: Jogo, fixture, confronto
 
+**Partida excluída** (`ExcludedMatch`):
+Partida que aparece na fonte mas não conta, por ter sido abandonada ou decidida fora de campo. Fica numa lista mantida à mão, com o motivo.
+_Avoid_: Partida anulada, partida cancelada
+
 **Time** (`Team`):
 O clube, com identidade estável de uma Temporada para outra, independentemente do nome usado pela fonte. Em cada Partida é o **Mandante** (`home`) ou o **Visitante** (`away`).
 _Avoid_: Equipe, clube, squad

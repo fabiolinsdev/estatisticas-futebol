@@ -23,6 +23,11 @@ export function buildApp({ db, env = process.env }: { db: Db; env?: Env }) {
     if (reply.statusCode === 200) reply.header("cache-control", cdnCache);
   });
 
+  async function envelope<T>(data: T) {
+    const state = await db.collectionState.findUnique({ where: { id: 1 } });
+    return { data, source, lastCollectedAt: state?.lastCollectedAt.toISOString() ?? null };
+  }
+
   async function requireLeague(slug: string) {
     const league = await findLeague(db, slug);
     if (league) return league;
@@ -69,7 +74,3 @@ export function buildApp({ db, env = process.env }: { db: Db; env?: Env }) {
 const cdnCache = "public, s-maxage=600, stale-while-revalidate=86400";
 
 const source = { name: "football-data.co.uk", url: "https://www.football-data.co.uk" };
-
-function envelope<T>(data: T) {
-  return { data, source };
-}

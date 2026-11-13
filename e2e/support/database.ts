@@ -7,5 +7,5 @@ export function testDb() {
 }
 
 export async function resetDatabase(db: ReturnType<typeof createDb>) {
-  await db.$executeRawUnsafe("TRUNCATE matches, teams, leagues RESTART IDENTITY CASCADE");
+  await db.$executeRawUnsafe("TRUNCATE matches, teams, leagues, collection_state RESTART IDENTITY CASCADE");
 }
