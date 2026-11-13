@@ -1,11 +1,16 @@
 import { badRequest } from "./http-errors.ts";
-import { type Metric, metrics, type Order, orders } from "./rankings.ts";
+import { type Order, orders, type Venue, venues } from "./rankings.ts";
+import { type Metric, metrics } from "./season-matches.ts";
 
 type QueryValue = string | string[];
 
-export type RawRankingQuery = { metric?: QueryValue; order?: QueryValue };
+export type RawRankingQuery = { metric?: QueryValue; order?: QueryValue; venue?: QueryValue };
 
-export function parseRankingQuery(query: RawRankingQuery): { metric: Metric; order: Order } {
+export function parseRankingQuery(query: RawRankingQuery): {
+  metric: Metric;
+  order: Order;
+  venue: Venue;
+} {
   const metricsHint = `Use ${listWithOr(metrics)}.`;
   if (query.metric === undefined) throw badRequest(`Informe a métrica. ${metricsHint}`);
   if (!isOneOf(metrics, query.metric)) {
@@ -17,7 +22,12 @@ export function parseRankingQuery(query: RawRankingQuery): { metric: Metric; ord
     throw badRequest(`Ordem inválida: "${joinRepeated(order)}". Use ${listWithOr(orders)}.`);
   }
 
-  return { metric: query.metric, order };
+  const venue = query.venue ?? "all";
+  if (!isOneOf(venues, venue)) {
+    throw badRequest(`Mando inválido: "${joinRepeated(venue)}". Use ${listWithOr(venues)}.`);
+  }
+
+  return { metric: query.metric, order, venue };
 }
 
 function isOneOf<T extends string>(allowed: readonly T[], value: QueryValue): value is T {

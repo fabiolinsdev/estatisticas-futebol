@@ -40,6 +40,13 @@ describe("erros do ranking", () => {
     expect(response.body.message).toBe('Ordem inválida: "maior". Use desc ou asc.');
   });
 
+  it("responde 400 para um mando inválido, listando os aceitos", async () => {
+    const response = await get(db, "/leagues/premier-league/rankings?metric=goalsFor&venue=casa");
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Mando inválido: "casa". Use all, home ou away.');
+  });
+
   it("responde 404 para uma Liga inexistente", async () => {
     const response = await get(db, "/leagues/mls/rankings?metric=goalsFor");
 
