@@ -14,5 +14,5 @@ Um placar vazio (`FTHG` ou `FTAG` sem valor) significa que a fonte ainda não co
 ## Consequences
 
 - Um Time desconhecido numa linha sem placar não faz a coleta falhar. O tratamento de nomes desconhecidos está na ADR-0007.
-- Uma estatística vazia (chutes ao gol ou cartões) numa Partida com placar faz a coleta da Liga falhar, como um valor inválido. O tratamento de estatística ausente é decidido no #8.
+- Uma estatística vazia (chutes ao gol ou cartões) numa Partida com placar é ignorada como o placar vazio, conforme a ADR-0008.
 - Hoje a coleta grava a Temporada atual da Liga só quando a Liga é criada. A virada de Temporada é decidida no #9.

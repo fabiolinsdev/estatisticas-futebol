@@ -17,8 +17,30 @@ model League {
   position      Int
   matches       Match[]
   teamSeasons   TeamSeason[]
+  sourceFiles   SourceFile[]
 
   @@map("leagues")
+}
+
+model SourceFile {
+  leagueSlug   String   @map("league_slug")
+  season       String
+  content      String
+  contentHash  String   @map("content_hash")
+  rulesHash    String   @map("rules_hash")
+  downloadedAt DateTime @map("downloaded_at")
+
+  league League @relation(fields: [leagueSlug], references: [slug], onDelete: Cascade)
+
+  @@id([leagueSlug, season])
+  @@map("source_files")
+}
+
+model CollectionState {
+  id              Int      @id
+  lastCollectedAt DateTime @map("last_collected_at")
+
+  @@map("collection_state")
 }
 
 model Team {

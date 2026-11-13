@@ -2,7 +2,7 @@
 
 O mapeamento dos nomes da fonte para Times é um objeto TypeScript versionado em `apps/collector/src/teams.ts`, separado por Liga: um nome da fonte só vale na Liga onde foi cadastrado. Ele cobre os 96 Times da Temporada 2026/27, conferidos contra os arquivos reais da fonte. O nome de exibição é o nome curto usado no país do Time, com acentos (`Bayern München`, `Alavés`, `Atlético de Madrid`), e o slug é esse nome sem acentos, em minúsculas e com hífens (`bayern-munchen`). Nomes abreviados pela fonte viram o nome completo da cidade ou do clube (`Man City` vira `Manchester City`, `Paris SG` vira `Paris Saint-Germain`).
 
-A Participação (`team_seasons`) é registrada na mesma transação das Partidas da Liga, para cada Time que aparece numa Partida com placar. Nesta etapa a coleta só acrescenta Participações. A remoção de quem sumiu do arquivo vem no #8, junto com a das Partidas.
+A Participação (`team_seasons`) é registrada na mesma transação das Partidas da Liga, para cada Time que aparece numa Partida gravada. Um Time que sumiu do arquivo perde a Participação junto com as Partidas (ADR-0008).
 
 A interpretação recebe o mapa de Times da Liga como parâmetro, junto com o texto do CSV e a Liga, como descreve a spec, e não importa o mapeamento por conta própria. Ela confere os nomes de todas as linhas com placar antes de gravar e, se houver nomes desconhecidos, a coleta da Liga falha listando todos eles de uma vez (`Times desconhecidos na fonte: "Man Utd", "Wrexham"`). Linhas sem placar continuam ignoradas antes da conferência dos nomes.
 

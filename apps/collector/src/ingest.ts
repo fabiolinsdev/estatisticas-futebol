@@ -1,12 +1,24 @@
+import { createHash } from "node:crypto";
 import type { Db } from "@estatisticas/db";
+import { type ExcludedMatch, excludedMatches as maintainedExclusions } from "./excluded-matches.ts";
 import { type League, leagues } from "./leagues.ts";
 import { parseMatches } from "./parse.ts";
 import type { Source } from "./source.ts";
 import { teamsOfLeague } from "./teams.ts";
 
-type IngestContext = { db: Db; source: Source; season: string };
+type IngestOptions = {
+  db: Db;
+  source: Source;
+  season: string;
+  excludedMatches?: ExcludedMatch[];
+  now?: () => Date;
+};
 
-export async function ingest(context: IngestContext) {
+type IngestContext = Required<IngestOptions>;
+
+export async function ingest(options: IngestOptions) {
+  const context = { excludedMatches: maintainedExclusions, now: () => new Date(), ...options };
+  const startedAt = context.now();
   const failures: string[] = [];
   for (const [position, league] of leagues.entries()) {
     try {
@@ -20,12 +32,34 @@ export async function ingest(context: IngestContext) {
     const summary = `A coleta falhou em ${failures.length} de ${leagues.length} Ligas`;
     throw new Error(`${summary}:\n${failures.join("\n")}`);
   }
+
+  await context.db.collectionState.upsert({
+    where: { id: 1 },
+    create: { id: 1, lastCollectedAt: startedAt },
+    update: { lastCollectedAt: startedAt },
+  });
 }
 
-async function ingestLeague({ db, source, season }: IngestContext, league: League, position: number) {
-  const csv = await source.fetchCsv({ divisionCode: league.divisionCode, season });
-  const matches = parseMatches(csv, league, teamsOfLeague(league.slug));
+async function ingestLeague(context: IngestContext, league: League, position: number) {
+  const { db, source, season } = context;
   const leagueSeason = { leagueSlug: league.slug, season };
+  const content = await source.fetchCsv({ divisionCode: league.divisionCode, season });
+  const downloadedAt = context.now();
+
+  const teamsBySourceName = teamsOfLeague(league.slug);
+  const exclusions = context.excludedMatches
+    .filter((match) => match.leagueSlug === league.slug && match.season === season)
+    .map(({ homeTeamSlug, awayTeamSlug }) => ({ homeTeamSlug, awayTeamSlug }));
+  const contentHash = sha256(content);
+  const rulesHash = sha256(JSON.stringify({ teamsBySourceName, exclusions }));
+
+  const stored = await db.sourceFile.findUnique({ where: { leagueSlug_season: leagueSeason } });
+  if (stored?.contentHash === contentHash && stored.rulesHash === rulesHash) return;
+
+  const matches = parseMatches(content, league, teamsBySourceName, exclusions);
+  const teams = new Map(
+    matches.flatMap(({ homeTeam, awayTeam }) => [homeTeam, awayTeam]).map((team) => [team.slug, team]),
+  );
 
   await db.$transaction(async (tx) => {
     const registryFields = { name: league.name, divisionCode: league.divisionCode, position };
@@ -35,26 +69,33 @@ async function ingestLeague({ db, source, season }: IngestContext, league: Leagu
       update: registryFields,
     });
 
-    const teams = new Map(
-      matches.flatMap(({ homeTeam, awayTeam }) => [homeTeam, awayTeam]).map((team) => [team.slug, team]),
-    );
     for (const team of teams.values()) {
       await tx.team.upsert({ where: { slug: team.slug }, create: team, update: { name: team.name } });
-      const participation = { ...leagueSeason, teamSlug: team.slug };
-      await tx.teamSeason.upsert({
-        where: { leagueSlug_season_teamSlug: participation },
-        create: participation,
-        update: {},
-      });
     }
 
-    for (const { homeTeam, awayTeam, ...details } of matches) {
-      const key = { ...leagueSeason, homeTeamSlug: homeTeam.slug, awayTeamSlug: awayTeam.slug };
-      await tx.match.upsert({
-        where: { leagueSlug_season_homeTeamSlug_awayTeamSlug: key },
-        create: { ...key, ...details },
-        update: details,
-      });
-    }
+    await tx.match.deleteMany({ where: leagueSeason });
+    await tx.teamSeason.deleteMany({ where: leagueSeason });
+    await tx.teamSeason.createMany({
+      data: [...teams.keys()].map((teamSlug) => ({ ...leagueSeason, teamSlug })),
+    });
+    await tx.match.createMany({
+      data: matches.map(({ homeTeam, awayTeam, ...details }) => ({
+        ...leagueSeason,
+        homeTeamSlug: homeTeam.slug,
+        awayTeamSlug: awayTeam.slug,
+        ...details,
+      })),
+    });
+
+    const file = { content, contentHash, rulesHash, downloadedAt };
+    await tx.sourceFile.upsert({
+      where: { leagueSlug_season: leagueSeason },
+      create: { ...leagueSeason, ...file },
+      update: file,
+    });
   });
+}
+
+function sha256(text: string): string {
+  return createHash("sha256").update(text).digest("hex");
 }

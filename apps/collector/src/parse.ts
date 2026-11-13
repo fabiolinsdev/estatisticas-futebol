@@ -1,4 +1,5 @@
 import { parse } from "csv-parse/sync";
+import type { ExcludedMatch } from "./excluded-matches.ts";
 import type { League } from "./leagues.ts";
 import type { Team, TeamsBySourceName } from "./teams.ts";
 
@@ -18,10 +19,15 @@ export type ParsedMatch = {
 
 type Row = Record<string, string>;
 
+type Exclusion = Pick<ExcludedMatch, "homeTeamSlug" | "awayTeamSlug">;
+
+const statColumns = ["HST", "AST", "HY", "AY", "HR", "AR"];
+
 export function parseMatches(
   csv: string,
   league: League,
   teams: TeamsBySourceName,
+  exclusions: Exclusion[],
 ): ParsedMatch[] {
   const rows: Row[] = parse(csv, { bom: true, columns: true, skip_empty_lines: true });
   for (const row of rows) {
@@ -33,10 +39,17 @@ export function parseMatches(
     }
   }
 
-  const playedRows = rows.filter(hasScore);
-  ensureTeamsAreKnown(teams, playedRows);
+  const completeRows = rows.filter((row) => hasScore(row) && hasAllStats(row));
+  ensureTeamsAreKnown(teams, completeRows);
+  ensureExclusionsAreKnown(teams, exclusions);
   const teamOf = (row: Row, side: "HomeTeam" | "AwayTeam") => teams[column(row, side)] as Team;
-  return playedRows.map((row) => ({
+  const isExcluded = (row: Row) =>
+    exclusions.some(
+      (exclusion) =>
+        exclusion.homeTeamSlug === teamOf(row, "HomeTeam").slug &&
+        exclusion.awayTeamSlug === teamOf(row, "AwayTeam").slug,
+    );
+  return completeRows.filter((row) => !isExcluded(row)).map((row) => ({
     date: parseDate(column(row, "Date")),
     homeTeam: teamOf(row, "HomeTeam"),
     awayTeam: teamOf(row, "AwayTeam"),
@@ -60,8 +73,22 @@ function ensureTeamsAreKnown(teams: TeamsBySourceName, rows: Row[]) {
   }
 }
 
+function ensureExclusionsAreKnown(teams: TeamsBySourceName, exclusions: Exclusion[]) {
+  const slugs = new Set(Object.values(teams).map((team) => team.slug));
+  const exclusionSlugs = exclusions.flatMap(({ homeTeamSlug, awayTeamSlug }) => [homeTeamSlug, awayTeamSlug]);
+  const unknown = new Set(exclusionSlugs.filter((slug) => !slugs.has(slug)));
+  if (unknown.size > 0) {
+    const names = [...unknown].map((slug) => `"${slug}"`).join(", ");
+    throw new Error(`Partida excluída com Time fora do mapeamento da Liga: ${names}`);
+  }
+}
+
 function hasScore(row: Row): boolean {
   return column(row, "FTHG") !== "" && column(row, "FTAG") !== "";
+}
+
+function hasAllStats(row: Row): boolean {
+  return statColumns.every((name) => column(row, name) !== "");
 }
 
 function column(row: Row, name: string): string {

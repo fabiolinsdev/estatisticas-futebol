@@ -1,7 +1,10 @@
+import { expect } from "vitest";
 import { buildApp, type Env } from "@estatisticas/api";
 import type { createDb } from "@estatisticas/db";
 
 export const source = { name: "football-data.co.uk", url: "https://www.football-data.co.uk" };
+
+export const anyTimestamp: unknown = expect.any(String);
 
 type Body = { data?: unknown; message?: unknown };
 

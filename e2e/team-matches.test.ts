@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { ingest } from "@estatisticas/collector";
-import { get, source } from "./support/api.ts";
+import { anyTimestamp, get, source } from "./support/api.ts";
 import { fakeSource } from "./support/fake-source.ts";
 import { resetDatabase, testDb } from "./support/database.ts";
 
@@ -64,6 +64,7 @@ describe("Partidas de um Time", () => {
         },
       ],
       source,
+      lastCollectedAt: anyTimestamp,
     });
   });
 
