@@ -4,6 +4,7 @@ import { notFound } from "./http-errors.ts";
 import { findLeague, findParticipatingTeam, leagueSlugs, listLeagues } from "./leagues.ts";
 import { listWithOr, parseRankingQuery, type RawRankingQuery } from "./ranking-query.ts";
 import { ranking } from "./rankings.ts";
+import { teamMatches } from "./team-matches.ts";
 import { teamSummary } from "./team-summary.ts";
 
 type RankingRequest = {
@@ -13,7 +14,9 @@ type RankingRequest = {
 
 type TeamRequest = { Params: { leagueSlug: string; teamSlug: string } };
 
-export function buildApp({ db }: { db: Db }) {
+export type Env = Record<string, string | undefined>;
+
+export function buildApp({ db, env = process.env }: { db: Db; env?: Env }) {
   const app = Fastify();
 
   app.addHook("onSend", async (_request, reply) => {
@@ -36,11 +39,15 @@ export function buildApp({ db }: { db: Db }) {
     return envelope(await ranking(db, league.slug, query));
   });
 
-  app.get<TeamRequest>("/leagues/:leagueSlug/teams/:teamSlug", async (request) => {
-    const { leagueSlug, teamSlug } = request.params;
+  async function requireTeam({ leagueSlug, teamSlug }: TeamRequest["Params"]) {
     const league = await requireLeague(leagueSlug);
     const team = await findParticipatingTeam(db, league, teamSlug);
     if (!team) throw notFound(`Time inexistente na ${league.name}: "${teamSlug}".`);
+    return { league, team };
+  }
+
+  app.get<TeamRequest>("/leagues/:leagueSlug/teams/:teamSlug", async (request) => {
+    const { league, team } = await requireTeam(request.params);
     return envelope({
       team,
       league: { slug: league.slug, name: league.name },
@@ -48,6 +55,13 @@ export function buildApp({ db }: { db: Db }) {
       ...(await teamSummary(db, league.slug, team.slug)),
     });
   });
+
+  if (env.TEAM_MATCHES_ENABLED === "true") {
+    app.get<TeamRequest>("/leagues/:leagueSlug/teams/:teamSlug/matches", async (request) => {
+      const { league, team } = await requireTeam(request.params);
+      return envelope(await teamMatches(db, league, team.slug));
+    });
+  }
 
   return app;
 }

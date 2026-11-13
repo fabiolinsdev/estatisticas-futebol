@@ -1,1 +1,1 @@
-export { buildApp } from "./app.ts";
+export { buildApp, type Env } from "./app.ts";

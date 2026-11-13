@@ -24,6 +24,10 @@ _Avoid_: Jogo, fixture, confronto
 O clube, com identidade estável de uma Temporada para outra, independentemente do nome usado pela fonte. Em cada Partida é o **Mandante** (`home`) ou o **Visitante** (`away`).
 _Avoid_: Equipe, clube, squad
 
+**Adversário** (`opponent`):
+O outro Time de uma Partida, visto a partir de um Time.
+_Avoid_: Rival, oponente
+
 **Mando** (`venue`):
 De que lado o Time jogou a Partida, como Mandante (`home`) ou como Visitante (`away`). Filtros e recortes usam `all` para todas as Partidas.
 _Avoid_: Local, casa/fora
