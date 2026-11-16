@@ -14,6 +14,7 @@
     "prepare": "lefthook install",
     "db:up": "docker compose up -d --wait",
     "db:migrate": "npm run migrate -w @estatisticas/db",
+    "collect": "node --env-file-if-exists=.env apps/collector/src/main.ts",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"

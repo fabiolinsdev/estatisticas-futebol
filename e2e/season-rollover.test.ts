@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
-import { ingest, type Source } from "@estatisticas/collector";
+import { ingest, type LeagueReport, type Source } from "@estatisticas/collector";
 import { get } from "./support/api.ts";
 import { fakeSource, midSeason } from "./support/fake-source.ts";
 import { resetDatabase, testDb } from "./support/database.ts";
@@ -124,6 +124,28 @@ describe("virada de Temporada", () => {
     await expect(ingest({ db, source: missingCurrent, now: midSeason })).rejects.toThrow(
       "premier-league: Arquivo da Temporada 2026/27 não encontrado na fonte",
     );
+  });
+});
+
+describe("relatório por Liga", () => {
+  it("informa o que aconteceu em cada Liga: gravada, virada, sem mudança ou falha", async () => {
+    const reports: LeagueReport[] = [];
+    const source = fakeSource({
+      E0: "E0-mando.csv",
+      "E0 2027/28": "E0-proxima-temporada.csv",
+      SP1: "SP1-sample.csv",
+      "I1 2027/28": "E0-sample.csv",
+    });
+
+    await expect(ingest({ db, source, now: midAugust, onLeague: (report) => reports.push(report) })).rejects.toThrow();
+
+    expect(reports).toEqual([
+      { league: "premier-league", outcome: "saved", season: "2027/28", matches: 1, previousSeason: "2026/27" },
+      { league: "la-liga", outcome: "unchanged", season: "2026/27" },
+      { league: "serie-a", outcome: "failed", error: 'Divisão errada no CSV: esperada "I1", encontrada "E0"' },
+      { league: "bundesliga", outcome: "unchanged", season: "2026/27" },
+      { league: "ligue-1", outcome: "unchanged", season: "2026/27" },
+    ]);
   });
 });
 
