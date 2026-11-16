@@ -13,7 +13,7 @@ Uma edição de uma Liga, identificada pelos anos que abrange (ex.: 2025/26).
 _Avoid_: Ano, edição
 
 **Temporada atual** (`currentSeason`):
-A única Temporada de cada Liga que o sistema conhece. A partir de 1º de agosto o sistema passa a esperar a próxima. A virada acontece por Liga, quando a primeira Partida da nova Temporada daquela Liga aparece, e nesse momento a anterior deixa de existir.
+A única Temporada de cada Liga que o sistema conhece. A partir de 1º de agosto (UTC) do ano em que ela termina, o sistema passa a esperar a próxima. A virada acontece por Liga, quando a primeira Partida da nova Temporada daquela Liga aparece, e nesse momento a anterior deixa de existir.
 _Avoid_: Temporada corrente, temporada vigente
 
 **Partida** (`Match`):

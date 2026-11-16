@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { ingest } from "@estatisticas/collector";
 import { anyTimestamp, get, source } from "./support/api.ts";
-import { fakeSource } from "./support/fake-source.ts";
+import { fakeSource, midSeason } from "./support/fake-source.ts";
 import { resetDatabase, testDb } from "./support/database.ts";
 
 const db = testDb();
@@ -11,7 +11,7 @@ afterAll(() => db.$disconnect());
 
 describe("lista de Ligas", () => {
   it("mostra as cinco Ligas com a Temporada atual, na ordem do cadastro", async () => {
-    await ingest({ db, source: fakeSource({ E0: "E0-sample.csv" }), season: "2026/27" });
+    await ingest({ db, source: fakeSource({ E0: "E0-sample.csv" }), now: midSeason });
 
     const response = await get(db, "/leagues");
 

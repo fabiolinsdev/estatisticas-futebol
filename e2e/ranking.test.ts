@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { ingest } from "@estatisticas/collector";
 import { anyTimestamp, get, source } from "./support/api.ts";
-import { fakeSource } from "./support/fake-source.ts";
+import { fakeSource, midSeason } from "./support/fake-source.ts";
 import { resetDatabase, testDb } from "./support/database.ts";
 
 const db = testDb();
@@ -16,13 +16,13 @@ const getafe = { slug: "getafe", name: "Getafe" };
 const brighton = { slug: "brighton", name: "Brighton" };
 
 async function laLigaRanking(metric: string) {
-  await ingest({ db, source: fakeSource({ SP1: "SP1-sample.csv" }), season: "2026/27" });
+  await ingest({ db, source: fakeSource({ SP1: "SP1-sample.csv" }), now: midSeason });
   return (await get(db, `/leagues/la-liga/rankings?metric=${metric}`)).body.data;
 }
 
 describe("ranking de uma Liga", () => {
   it("mostra os dois Times do 4×4 entre Man United e Aston Villa com 4 Gols marcados", async () => {
-    await ingest({ db, source: fakeSource({ E0: "E0-sample.csv" }), season: "2026/27" });
+    await ingest({ db, source: fakeSource({ E0: "E0-sample.csv" }), now: midSeason });
 
     const response = await get(db, "/leagues/premier-league/rankings?metric=goalsFor");
 
@@ -55,7 +55,7 @@ describe("ranking de uma Liga", () => {
     await ingest({
       db,
       source: fakeSource({ E0: "E0-cartoes.csv", SP1: "SP1-sample.csv" }),
-      season: "2026/27",
+      now: midSeason,
     });
 
     const premierLeague = await get(db, "/leagues/premier-league/rankings?metric=yellowCards");
@@ -72,7 +72,7 @@ describe("ranking de uma Liga", () => {
   });
 
   it("ranqueia os Cartões vermelhos como a fonte informa", async () => {
-    await ingest({ db, source: fakeSource({ E0: "E0-cartoes.csv" }), season: "2026/27" });
+    await ingest({ db, source: fakeSource({ E0: "E0-cartoes.csv" }), now: midSeason });
 
     const response = await get(db, "/leagues/premier-league/rankings?metric=redCards");
 
@@ -92,7 +92,7 @@ describe("ranking de uma Liga", () => {
     };
 
     beforeEach(() =>
-      ingest({ db, source: fakeSource({ E0: "E0-sintetico-ordem.csv" }), season: "2026/27" }),
+      ingest({ db, source: fakeSource({ E0: "E0-sintetico-ordem.csv" }), now: midSeason }),
     );
 
     it("ordena pela média decrescente por padrão e desempata pelo maior total", async () => {
@@ -122,7 +122,7 @@ describe("ranking de uma Liga", () => {
   });
 
   it("ignora uma Partida ainda sem placar na fonte", async () => {
-    await ingest({ db, source: fakeSource({ E0: "E0-placar-vazio.csv" }), season: "2026/27" });
+    await ingest({ db, source: fakeSource({ E0: "E0-placar-vazio.csv" }), now: midSeason });
 
     const response = await get(db, "/leagues/premier-league/rankings?metric=goalsFor");
 
@@ -136,7 +136,7 @@ describe("ranking de uma Liga", () => {
     const collecting = ingest({
       db,
       source: fakeSource({ E0: "E0-sample.csv", SP1: "E0-sample.csv" }),
-      season: "2026/27",
+      now: midSeason,
     });
 
     await expect(collecting).rejects.toThrow(
@@ -153,7 +153,7 @@ describe("ranking de uma Liga", () => {
     const collecting = ingest({
       db,
       source: fakeSource({ E0: "E0-placar-invalido.csv" }),
-      season: "2026/27",
+      now: midSeason,
     });
 
     await expect(collecting).rejects.toThrow('Placar inválido no CSV: "x"');

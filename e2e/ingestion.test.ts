@@ -12,8 +12,8 @@ beforeEach(() => resetDatabase(db));
 afterAll(() => db.$disconnect());
 
 const season = "2026/27";
-const firstRun = "2026-11-13T12:00:00.000Z";
-const secondRun = "2026-11-13T15:00:00.000Z";
+const firstRun = "2027-03-01T12:00:00.000Z";
+const secondRun = "2027-03-01T15:00:00.000Z";
 const at = (iso: string) => () => new Date(iso);
 
 const enabled = { TEAM_MATCHES_ENABLED: "true" };
@@ -21,7 +21,7 @@ const villa = "/leagues/premier-league/teams/aston-villa";
 const premierLeagueFile = { leagueSlug_season: { leagueSlug: "premier-league", season } };
 
 function collect(fixtures: Record<string, string>, options: Partial<Parameters<typeof ingest>[0]> = {}) {
-  return ingest({ db, source: fakeSource(fixtures), season, now: at(firstRun), ...options });
+  return ingest({ db, source: fakeSource(fixtures), now: at(firstRun), ...options });
 }
 
 async function villaMatchDates() {
@@ -201,7 +201,7 @@ describe("lastCollectedAt", () => {
       fetchCsv: () => Promise.reject(new Error("Fonte fora do ar")),
     };
 
-    await expect(ingest({ db, source: failing, season, now: at(secondRun) })).rejects.toThrow();
+    await expect(ingest({ db, source: failing, now: at(secondRun) })).rejects.toThrow();
 
     const response = await get(db, "/leagues");
     expect(response.body).toMatchObject({ lastCollectedAt: firstRun });

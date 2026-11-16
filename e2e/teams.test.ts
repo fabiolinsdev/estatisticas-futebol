@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { ingest, type Source } from "@estatisticas/collector";
 import { get } from "./support/api.ts";
-import { fakeSource } from "./support/fake-source.ts";
+import { fakeSource, midSeason } from "./support/fake-source.ts";
 import { resetDatabase, testDb } from "./support/database.ts";
 
 const db = testDb();
@@ -14,7 +14,7 @@ describe("mapeamento de Times", () => {
     const collecting = ingest({
       db,
       source: fakeSource({ E0: "E0-times-desconhecidos.csv", SP1: "SP1-sample.csv" }),
-      season: "2026/27",
+      now: midSeason,
     });
 
     await expect(collecting).rejects.toThrow(
@@ -38,7 +38,7 @@ describe("mapeamento de Times", () => {
           : otherLeagues.fetchCsv(file),
     };
 
-    await expect(ingest({ db, source, season: "2026/27" })).rejects.toThrow(
+    await expect(ingest({ db, source, now: midSeason })).rejects.toThrow(
       "premier-league: Fonte fora do ar",
     );
 
@@ -50,7 +50,7 @@ describe("mapeamento de Times", () => {
     const collecting = ingest({
       db,
       source: fakeSource({ E0: "E0-time-de-outra-liga.csv" }),
-      season: "2026/27",
+      now: midSeason,
     });
 
     await expect(collecting).rejects.toThrow(
@@ -62,7 +62,7 @@ describe("mapeamento de Times", () => {
     await ingest({
       db,
       source: fakeSource({ E0: "E0-sample.csv", SP1: "SP1-sample.csv" }),
-      season: "2026/27",
+      now: midSeason,
     });
 
     const participations = await db.teamSeason.findMany({
