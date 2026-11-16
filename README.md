@@ -26,9 +26,15 @@ npm run collect      # baixa os CSVs reais do football-data.co.uk e grava no ban
 
 O comando imprime uma linha por Liga e termina com código 1 se alguma Liga falhar. Um arquivo que não mudou desde a última coleta não é regravado.
 
+Para subir a API localmente na porta 3000 (ou na do `PORT`), com o banco do `DATABASE_URL`:
+
+```bash
+npm run api
+```
+
 ## Produção
 
-Passos manuais, feitos uma vez pelo mantenedor, na ordem abaixo. As decisões estão nas ADRs 0002 e 0011.
+Passos manuais, feitos uma vez pelo mantenedor, na ordem abaixo. As decisões estão nas ADRs 0002, 0011 e 0012.
 
 ### 1. Banco no Neon
 
@@ -72,6 +78,30 @@ gh workflow run coleta.yml && gh run watch
 ```
 
 Uma coleta com falha deixa o workflow falho, e o GitHub manda um e-mail para quem mexeu por último no agendamento. Confira se as notificações de Actions estão ligadas em [github.com/settings/notifications](https://github.com/settings/notifications).
+
+### 5. API na Vercel
+
+1. Em [vercel.com/new](https://vercel.com/new), importe o repositório `fabiolinsdev/estatisticas-futebol`. Em **Root Directory**, escolha `apps/api`. O framework detectado deve ser o Fastify.
+2. Em **Environment Variables**, cadastre as duas variáveis para **Production** e **Preview**:
+   - `DATABASE_URL`: a string do `api_leitura` **com pooling** (o host termina em `-pooler`), no formato `postgresql://api_leitura:<senha>@<host-pooler>/estatisticas?sslmode=require`. Nunca use a string do dono aqui.
+   - `TEAM_MATCHES_ENABLED`: `true` (ADR-0005).
+3. Faça o deploy. Em **Settings → Build and Deployment**, confira se o **Node.js Version** é 24.x. A região da função (`gru1`, São Paulo) vem do `apps/api/vercel.json`.
+
+A produção é atualizada a cada push na `main`, e cada pull request ganha um preview que lê o mesmo banco, sem poder escrever nele.
+
+### 6. Limite de requisições no firewall da Vercel
+
+No projeto, abra **Firewall → Configure → + New Rule** e preencha:
+
+- **Name**: `Limite por IP`
+- **If**: `Request Path` `starts with` `/`
+- **Then**: `Rate Limit`, estratégia **Fixed Window**, **Time Window** `60s`, **Request Limit** `60`, chave **IP**, ação **Too Many Requests (429)**
+
+Salve com **Save Rule** e publique com **Review Changes → Publish**. Para conferir, a 61ª requisição dentro de um minuto deve responder 429:
+
+```bash
+for i in $(seq 1 61); do curl -s -o /dev/null -w "%{http_code}\n" https://<domínio da API>/leagues; done | sort | uniq -c
+```
 
 ## Checagens
 
