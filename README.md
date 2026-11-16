@@ -15,6 +15,15 @@ npm run db:up        # sobe o Postgres 17 na porta 5433, com os bancos de desenv
 npm run db:migrate   # aplica as migrações no banco de desenvolvimento (precisa de DATABASE_URL no .env)
 ```
 
+## Coleta manual
+
+```bash
+npm run db:migrate   # aplica as migrações pendentes
+npm run collect      # baixa os CSVs reais do football-data.co.uk e grava no banco do DATABASE_URL
+```
+
+O comando imprime uma linha por Liga e termina com código 1 se alguma Liga falhar. Um arquivo que não mudou desde a última coleta não é regravado.
+
 ## Checagens
 
 ```bash

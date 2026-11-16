@@ -12,7 +12,14 @@ type IngestOptions = {
   source: Source;
   excludedMatches?: ExcludedMatch[];
   now?: () => Date;
+  onLeague?: (report: LeagueReport) => void;
 };
+
+type Outcome =
+  | { outcome: "saved"; season: string; matches: number; previousSeason?: string }
+  | { outcome: "unchanged"; season: string };
+
+export type LeagueReport = { league: string } & (Outcome | { outcome: "failed"; error: string });
 
 type IngestContext = Required<IngestOptions> & { startedAt: Date };
 
@@ -26,15 +33,17 @@ type SeasonFile = {
 };
 
 export async function ingest(options: IngestOptions) {
-  const defaults = { excludedMatches: maintainedExclusions, now: () => new Date() };
+  const defaults = { excludedMatches: maintainedExclusions, now: () => new Date(), onLeague: () => {} };
   const withDefaults = { ...defaults, ...options };
   const context = { ...withDefaults, startedAt: withDefaults.now() };
   const failures: string[] = [];
   for (const [position, league] of leagues.entries()) {
     try {
-      await ingestLeague(context, league, position);
+      context.onLeague({ league: league.slug, ...(await ingestLeague(context, league, position)) });
     } catch (error) {
-      failures.push(`- ${league.slug}: ${error instanceof Error ? error.message : String(error)}`);
+      const message = error instanceof Error ? error.message : String(error);
+      failures.push(`- ${league.slug}: ${message}`);
+      context.onLeague({ league: league.slug, outcome: "failed", error: message });
     }
   }
 
@@ -50,7 +59,7 @@ export async function ingest(options: IngestOptions) {
   });
 }
 
-async function ingestLeague(context: IngestContext, league: League, position: number) {
+async function ingestLeague(context: IngestContext, league: League, position: number): Promise<Outcome> {
   const registered = await context.db.league.findUnique({
     where: { slug: league.slug },
     select: { currentSeason: true },
@@ -62,7 +71,8 @@ async function ingestLeague(context: IngestContext, league: League, position: nu
     const matches = next?.matches() ?? [];
     if (next && matches.length > 0) {
       await save(context, league, position, next, matches);
-      return;
+      const previousSeason = registered ? { previousSeason: currentSeason } : {};
+      return { outcome: "saved", season: next.season, matches: matches.length, ...previousSeason };
     }
   }
 
@@ -72,9 +82,13 @@ async function ingestLeague(context: IngestContext, league: League, position: nu
   const stored = await context.db.sourceFile.findUnique({
     where: { leagueSlug_season: { leagueSlug: league.slug, season: currentSeason } },
   });
-  if (stored?.contentHash === current.contentHash && stored.rulesHash === current.rulesHash) return;
+  if (stored?.contentHash === current.contentHash && stored.rulesHash === current.rulesHash) {
+    return { outcome: "unchanged", season: currentSeason };
+  }
 
-  await save(context, league, position, current, current.matches());
+  const matches = current.matches();
+  await save(context, league, position, current, matches);
+  return { outcome: "saved", season: currentSeason, matches: matches.length };
 }
 
 async function download(context: IngestContext, league: League, season: string): Promise<SeasonFile | null> {
