@@ -19,7 +19,20 @@ async function ensureDatabaseIsUp() {
   } catch {
     const { host } = new URL(testDatabaseUrl);
     throw new Error(`Postgres de teste fora do ar em ${host}: rode npm run db:up`);
+  }
+  try {
+    await ensureApiRole(db);
   } finally {
     await db.$disconnect();
   }
+}
+
+// A migração de leitura da API exige que o usuário já exista, como em produção.
+async function ensureApiRole(db: ReturnType<typeof createDb>) {
+  await db.$executeRawUnsafe(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'api_leitura') THEN
+        CREATE ROLE api_leitura NOLOGIN;
+      END IF;
+    END $$`);
 }
