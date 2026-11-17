@@ -1,6 +1,6 @@
 # Estatísticas de Futebol
 
-Coletor e API REST de estatísticas (gols, chutes ao gol, cartões) das cinco principais ligas europeias. Vocabulário em [`GLOSSARY.md`](GLOSSARY.md) e decisões em [`docs/adr/`](docs/adr/).
+Coletor, API REST e site de estatísticas (gols, chutes ao gol, cartões) das cinco principais ligas europeias. Vocabulário em [`GLOSSARY.md`](GLOSSARY.md) e decisões em [`docs/adr/`](docs/adr/).
 
 ## Ambiente local
 
@@ -31,6 +31,17 @@ Para subir a API localmente na porta 3000 (ou na do `PORT`), com o banco do `DAT
 ```bash
 npm run api
 ```
+
+## Frontend
+
+O site (`apps/web`, React com Vite) mostra os rankings e a página de cada Time (ADR-0013). Para rodá-lo em http://localhost:5173:
+
+```bash
+npm run web                                    # usa a API de produção
+API_URL=http://localhost:3000 npm run web      # usa a API local do npm run api
+```
+
+O navegador só chama `/api/...` no próprio domínio do site: o Vite, em desenvolvimento, e a Vercel, em produção (`apps/web/vercel.json`), repassam essas chamadas para a API.
 
 ## Produção
 
@@ -102,6 +113,20 @@ Salve com **Save Rule** e publique com **Review Changes → Publish**. Para conf
 ```bash
 for i in $(seq 1 61); do curl -s -o /dev/null -w "%{http_code}\n" https://<domínio da API>/leagues; done | sort | uniq -c
 ```
+
+### 7. Frontend na Vercel
+
+O frontend é um segundo projeto da Vercel, com o Root Directory em `apps/web` e sem variáveis de ambiente: o endereço da API fica no `apps/web/vercel.json`. Na raiz do repositório, com a CLI logada:
+
+```bash
+npx vercel project add estatisticas-futebol-web
+npx vercel link --project estatisticas-futebol-web --yes
+npx vercel project inspect estatisticas-futebol-web   # confira o Root Directory: apps/web
+npx vercel git connect
+npx vercel deploy --prod
+```
+
+Como na API, a produção é atualizada a cada push na `main`, e cada pull request ganha um preview.
 
 ## Checagens
 

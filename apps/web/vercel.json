@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "npm install --ignore-scripts",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://estatisticas-futebol-flame.vercel.app/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

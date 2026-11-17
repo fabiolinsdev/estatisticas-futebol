@@ -12,5 +12,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["apps/*/src", "packages/*/src", "packages/*/prisma.config.ts", "e2e", "vitest.config.ts"]
+  "include": ["apps/api/src", "apps/collector/src", "packages/*/src", "packages/*/prisma.config.ts", "e2e", "vitest.config.ts"]
 }

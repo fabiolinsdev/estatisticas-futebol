@@ -16,14 +16,16 @@
     "db:migrate": "npm run migrate -w @estatisticas/db",
     "collect": "node --env-file-if-exists=.env apps/collector/src/main.ts",
     "api": "node --env-file-if-exists=.env apps/api/src/index.ts",
+    "web": "npm run dev -w @estatisticas/web",
     "lint": "eslint .",
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p apps/web/tsconfig.json",
     "test": "vitest run"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.19.2",
     "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "lefthook": "^2.2.2",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.2",
