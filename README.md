@@ -66,7 +66,7 @@ gh api -X PUT repos/fabiolinsdev/estatisticas-futebol/environments/producao \
   -F "deployment_branch_policy[custom_branch_policies]=true"
 gh api -X POST repos/fabiolinsdev/estatisticas-futebol/environments/producao/deployment-branch-policies \
   -f name=main -f type=branch
-gh secret set DATABASE_URL --env producao   # cole a string do dono, sem pooling
+gh secret set DATABASE_URL --env producao   # cole a string do dono, sem pooling e com sslmode=verify-full
 ```
 
 ### 4. Primeira coleta
@@ -83,7 +83,7 @@ Uma coleta com falha deixa o workflow falho, e o GitHub manda um e-mail para que
 
 1. Em [vercel.com/new](https://vercel.com/new), importe o repositório `fabiolinsdev/estatisticas-futebol`. Em **Root Directory**, escolha `apps/api`. O framework detectado deve ser o Fastify.
 2. Em **Environment Variables**, cadastre as duas variáveis para **Production** e **Preview**:
-   - `DATABASE_URL`: a string do `api_leitura` **com pooling** (o host termina em `-pooler`), no formato `postgresql://api_leitura:<senha>@<host-pooler>/estatisticas?sslmode=require`. Nunca use a string do dono aqui.
+   - `DATABASE_URL`: a string do `api_leitura` **com pooling** (o host termina em `-pooler`), no formato `postgresql://api_leitura:<senha>@<host-pooler>/estatisticas?sslmode=verify-full`. Nunca use a string do dono aqui.
    - `TEAM_MATCHES_ENABLED`: `true` (ADR-0005).
 3. Faça o deploy. Em **Settings → Build and Deployment**, confira se o **Node.js Version** é 24.x. A região da função (`gru1`, São Paulo) vem do `apps/api/vercel.json`.
 
