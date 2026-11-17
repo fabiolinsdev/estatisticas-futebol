@@ -5,8 +5,14 @@
   "exports": {
     ".": "./src/api.ts"
   },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node24 --outfile=index.mjs --external:fastify --external:pg --external:@prisma/*"
+  },
   "dependencies": {
     "@estatisticas/db": "*",
     "fastify": "^5.12.8"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

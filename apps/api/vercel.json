@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "regions": ["gru1"],
-  "installCommand": "npm install --ignore-scripts && npm run generate -w @estatisticas/db"
+  "installCommand": "npm install --ignore-scripts && npm run generate -w @estatisticas/db",
+  "buildCommand": "npm run build"
 }
