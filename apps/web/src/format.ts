@@ -2,6 +2,8 @@ const decimal = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maxim
 
 export const formatAverage = (value: number) => decimal.format(value);
 
+export const formatMatches = (count: number) => `${count} ${count === 1 ? "Partida" : "Partidas"}`;
+
 export function formatDay(isoDay: string) {
   const [year, month, day] = isoDay.split("-");
   return `${day}/${month}/${year}`;

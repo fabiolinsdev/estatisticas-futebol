@@ -1,7 +1,7 @@
 import { screen, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
-import { apiUrl, server } from "./support/fake-api.ts";
+import { apiUrl, envelope, server } from "./support/fake-api.ts";
 import { renderApp } from "./support/render-app.tsx";
 
 function rankingRows() {
@@ -55,6 +55,41 @@ describe("ranking de uma Liga", () => {
     expect(within(panel).getByText("Brighton")).toBeInTheDocument();
     expect(within(panel).getByText("26 em 10 Partidas (2,60 por Partida)")).toBeInTheDocument();
     expect(within(panel).getByText("2,20")).toBeInTheDocument();
+  });
+
+  it("a média da Liga é a soma dos totais dividida pela soma das Partidas", async () => {
+    server.use(
+      http.get(apiUrl("/leagues/:league/rankings"), () =>
+        HttpResponse.json(
+          envelope([
+            { team: { slug: "brighton", name: "Brighton" }, matches: 1, total: 3, average: 3 },
+            { team: { slug: "chelsea", name: "Chelsea" }, matches: 10, total: 20, average: 2 },
+          ]),
+        ),
+      ),
+    );
+    renderApp("/premier-league");
+
+    const panel = await screen.findByRole("complementary");
+    expect(within(panel).getByText("3 em 1 Partida (3,00 por Partida)")).toBeInTheDocument();
+    expect(within(panel).getByText("2,09")).toBeInTheDocument();
+  });
+
+  it("um ranking sem nenhum Time avisa que não há Partidas no recorte", async () => {
+    server.use(http.get(apiUrl("/leagues/:league/rankings"), () => HttpResponse.json(envelope([]))));
+    renderApp("/premier-league?mando=away");
+
+    expect(await screen.findByText("Nenhum Time tem Partidas neste recorte ainda.")).toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
+  });
+
+  it("um endereço que não existe mostra página não encontrada, com as abas das Ligas", async () => {
+    renderApp("/premier-league/qualquer-coisa");
+
+    expect(await screen.findByText("Página não encontrada.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Premier League" })).toBeInTheDocument();
+    expect(screen.queryByText(/falar com a API/)).not.toBeInTheDocument();
   });
 
   it("mostra a fonte e quando foi a última coleta", async () => {

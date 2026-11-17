@@ -58,6 +58,16 @@ describe("página do Time", () => {
     renderApp("/premier-league/times/brighton");
 
     await screen.findByRole("heading", { name: "Brighton" });
+    const matches = screen.getByRole("table", { name: "Partidas" });
+    expect(within(matches).getAllByRole("columnheader").map((header) => header.textContent)).toEqual([
+      "Data",
+      "Mando",
+      "Adversário",
+      "Placar",
+      "Chutes ao gol",
+      "Cartões amarelos",
+      "Cartões vermelhos",
+    ]);
     expect(rowsOf("Partidas")).toEqual([
       ["23/08/2026", "Mandante", "Aston Villa", "4 × 0", "6 × 0", "2 × 3", "0 × 1"],
       ["30/08/2026", "Visitante", "Chelsea", "3 × 4", "6 × 6", "3 × 1", "0 × 0"],
@@ -81,11 +91,22 @@ describe("página do Time", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  it("um recorte com uma só Partida fala no singular", async () => {
+    server.use(
+      http.get(apiUrl("/leagues/premier-league/teams/brighton"), () =>
+        HttpResponse.json(envelope({ ...brightonSummary, away: { ...brightonSummary.away, matches: 1 } })),
+      ),
+    );
+    renderApp("/premier-league/times/brighton");
+
+    expect(await screen.findByRole("columnheader", { name: "Visitante (1 Partida)" })).toBeInTheDocument();
+  });
+
   it("um Time inexistente mostra a mensagem da API e o caminho de volta para o ranking", async () => {
     const { user, location } = renderApp("/premier-league/times/wrexham");
 
     expect(await screen.findByText('Time inexistente na Premier League: "wrexham".')).toBeInTheDocument();
-    await user.click(screen.getByRole("link", { name: "Premier League" }));
+    await user.click(screen.getByRole("link", { name: "← Ranking da Premier League" }));
     expect(await screen.findByRole("cell", { name: "Brighton" })).toBeInTheDocument();
     expect(location()).toBe("/premier-league");
   });

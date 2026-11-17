@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
+import type { RankingRow } from "../../src/api.ts";
 
 export const lastCollectedAt = "2026-11-16T21:51:57.384Z";
 
@@ -18,8 +19,6 @@ export const leagues = [
   { slug: "bundesliga", name: "Bundesliga", currentSeason: "2026/27" },
   { slug: "ligue-1", name: "Ligue 1", currentSeason: "2026/27" },
 ];
-
-type RankingRow = { team: { slug: string; name: string }; matches: number; total: number; average: number };
 
 const row = (slug: string, name: string, matches: number, total: number, average: number): RankingRow => ({
   team: { slug, name },

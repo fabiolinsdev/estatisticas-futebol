@@ -1,6 +1,6 @@
 import { Link, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { ApiError, getJson, type TeamMatch, type TeamSummary } from "./api.ts";
-import { formatAverage, formatDay } from "./format.ts";
+import { formatAverage, formatDay, formatMatches } from "./format.ts";
 import { metrics, venues, type Metric } from "./labels.ts";
 
 async function matchesUnlessDisabled(path: string, signal: AbortSignal) {
@@ -42,7 +42,7 @@ export function TeamPage() {
             <th rowSpan={2}>Métrica</th>
             {slices.map((slice) => (
               <th key={slice} colSpan={2}>
-                {venues[slice]} ({summary[slice].matches} Partidas)
+                {venues[slice]} ({formatMatches(summary[slice].matches)})
               </th>
             ))}
           </tr>
@@ -85,9 +85,9 @@ export function TeamPage() {
               <th>Mando</th>
               <th>Adversário</th>
               <th className="number">Placar</th>
-              <th className="number">Chutes ao gol</th>
-              <th className="number">Amarelos</th>
-              <th className="number">Vermelhos</th>
+              <th className="number">{metrics.shotsOnTarget}</th>
+              <th className="number">{metrics.yellowCards}</th>
+              <th className="number">{metrics.redCards}</th>
             </tr>
           </thead>
           <tbody>

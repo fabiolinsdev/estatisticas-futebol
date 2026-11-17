@@ -8,6 +8,8 @@ export type League = { slug: string; name: string; currentSeason: string };
 
 export type TeamRef = { slug: string; name: string };
 
+type LeagueRef = { slug: string; name: string };
+
 export type RankingRow = { team: TeamRef; matches: number; total: number; average: number };
 
 type MetricValue = { total: number; average: number | null };
@@ -23,7 +25,7 @@ export type Slice = {
 
 export type TeamSummary = {
   team: TeamRef;
-  league: TeamRef;
+  league: LeagueRef;
   season: string;
   all: Slice;
   home: Slice;
