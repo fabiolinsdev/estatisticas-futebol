@@ -8,7 +8,7 @@ A primeira versão tem duas telas:
 - **Ranking de uma Liga**: abas das cinco Ligas, abas das cinco métricas, filtro de Mando (todas, Mandante, Visitante) e de ordem (maior ou menor média primeiro). A tabela mostra posição, Time, Partidas, total e média, e um painel mostra o líder e a média da Liga. A média da Liga é a soma dos totais dividida pela soma das Partidas dos Times do ranking, no recorte de Mando escolhido, para que um Time com menos Partidas não pese tanto quanto os outros. Um ranking sem nenhum Time (antes da primeira coleta ou num Mando ainda sem Partidas) mostra um aviso no lugar da tabela.
 - **Página do Time**: aberta ao clicar no nome do Time. Mostra o resumo (todas as Partidas, como Mandante e como Visitante) e a lista de Partidas. Se a rota de Partidas estiver desligada na API (ADR-0005), essa seção não aparece e o resto da página funciona.
 
-Os filtros ficam no endereço, com o React Router, para que o link possa ser compartilhado: `/serie-a?metrica=yellowCards&mando=home&ordem=asc` e `/serie-a/times/fiorentina`. Os valores dos parâmetros são os da API, e um valor ausente ou desconhecido vale o padrão (`goalsFor`, `all`, `desc`). A raiz `/` abre a Premier League. Toda tela mostra a fonte e o `lastCollectedAt` que a API devolve.
+Os filtros ficam no endereço, com o React Router, para que o link possa ser compartilhado: `/serie-a?metrica=yellowCards&mando=home&ordem=asc` e `/serie-a/times/fiorentina`. Os valores dos parâmetros são os da API, e um valor ausente ou desconhecido vale o padrão (`goalsFor`, `all`, `desc`). A raiz `/` abre a Premier League. Toda tela mostra quando foi a última coleta (o `lastCollectedAt` da API). A fonte não aparece na tela, por decisão do mantenedor. A API continua citando a fonte em toda resposta (ADR-0003 e ADR-0005).
 
 Quando a API responde um erro, a tela mostra a `message` dela, que já vem em português (ADR-0005), com as abas das Ligas por cima. Sem `message` (por exemplo, um 502 da Vercel), a tela diz qual status a API respondeu e pede para tentar de novo. Se a API nem responde, a tela diz que não conseguiu falar com ela. Um endereço que não corresponde a nenhuma tela mostra "Página não encontrada", sem chamar a API. O erro de um Time inexistente traz o link de volta para o ranking da Liga.
 
@@ -25,6 +25,7 @@ Os testes usam Vitest com Testing Library e jsdom, e simulam a API com o MSW. El
 - **Parâmetros do endereço em inglês** (`metric`, `venue`, `order`): descartados em favor de `metrica`, `mando` e `ordem`.
 - **Esconder a lista de Partidas na primeira versão**: descartado. Ela aparece quando a API a oferece.
 - **Testes num navegador real com Playwright**: descartados nesta versão.
+- **Citar a fonte no rodapé do site**: descartado por decisão do mantenedor. A citação fica na API.
 - **Média da Liga como média simples das médias dos Times**: descartada, porque daria o mesmo peso a um Time com menos Partidas. **Sem média da Liga no painel**: descartado.
 
 ## Consequences

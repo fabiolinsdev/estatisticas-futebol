@@ -92,14 +92,11 @@ describe("ranking de uma Liga", () => {
     expect(screen.queryByText(/falar com a API/)).not.toBeInTheDocument();
   });
 
-  it("mostra a fonte e quando foi a última coleta", async () => {
+  it("mostra quando foi a última coleta, sem citar a fonte na tela", async () => {
     renderApp("/premier-league");
 
-    expect(await screen.findByRole("link", { name: "football-data.co.uk" })).toHaveAttribute(
-      "href",
-      "https://www.football-data.co.uk",
-    );
-    expect(screen.getByText(/Atualizado em 16\/11\/2026 às 18:51/)).toBeInTheDocument();
+    expect(await screen.findByText("Atualizado em 16/11/2026 às 18:51")).toBeInTheDocument();
+    expect(screen.queryByText(/football-data/)).not.toBeInTheDocument();
   });
 
   it("mostra um aviso enquanto os dados chegam", async () => {

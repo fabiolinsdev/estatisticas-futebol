@@ -7,7 +7,7 @@ export async function layoutLoader({ request }: { request: Request }) {
 }
 
 export function Layout() {
-  const { data: leagues, source, lastCollectedAt } = useLoaderData<typeof layoutLoader>();
+  const { data: leagues, lastCollectedAt } = useLoaderData<typeof layoutLoader>();
   const { league: current } = useParams();
   const { search } = useLocation();
   const navigation = useNavigation();
@@ -31,10 +31,7 @@ export function Layout() {
       </nav>
       {navigation.state === "loading" && <p className="status">Carregando…</p>}
       <Outlet />
-      <footer>
-        Fonte: <a href={source.url}>{source.name}</a> ·{" "}
-        {lastCollectedAt ? `Atualizado em ${formatDateTime(lastCollectedAt)}` : "Ainda sem coleta"}
-      </footer>
+      <footer>{lastCollectedAt ? `Atualizado em ${formatDateTime(lastCollectedAt)}` : "Ainda sem coleta"}</footer>
     </>
   );
 }
