@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PROTÓTIPO DESCARTÁVEL · Estatísticas de Futebol</title>
+<script src="dados.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+  .aviso { background: #facc15; color: #000; text-align: center; font-size: 12px; padding: 4px; font-weight: 600; }
+  header { padding: 20px 32px 8px; }
+  h1 { margin: 0; font-size: 24px; }
+  .sub { color: #94a3b8; font-size: 13px; margin-top: 4px; }
+  .abas { display: flex; gap: 8px; padding: 12px 32px; flex-wrap: wrap; }
+  .abas button { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; border-radius: 999px; padding: 8px 16px; cursor: pointer; font-size: 14px; }
+  .abas button.ativo { background: #22c55e; color: #052e16; border-color: #22c55e; font-weight: 700; }
+  .metricas button.ativo { background: #38bdf8; color: #082f49; border-color: #38bdf8; }
+  main { padding: 8px 32px 32px; display: grid; grid-template-columns: 1fr 300px; gap: 24px; }
+  table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 12px; overflow: hidden; }
+  th, td { padding: 10px 14px; text-align: left; font-size: 14px; }
+  th { background: #334155; color: #94a3b8; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  tr:nth-child(even) td { background: #172033; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  th.num { text-align: right; }
+  .barra { height: 8px; background: #38bdf8; border-radius: 4px; }
+  .pos { color: #64748b; width: 32px; }
+  .top td { font-weight: 700; }
+  aside { background: #1e293b; border-radius: 12px; padding: 20px; height: fit-content; }
+  aside h2 { margin: 0 0 12px; font-size: 14px; color: #94a3b8; text-transform: uppercase; }
+  .destaque { font-size: 32px; font-weight: 800; color: #22c55e; }
+  .rodape { color: #64748b; font-size: 12px; padding: 0 32px 24px; }
+</style>
+</head>
+<body>
+<div class="aviso">PROTÓTIPO DESCARTÁVEL · dados reais da API capturados em 16/11/2026</div>
+<header>
+  <h1>⚽ Estatísticas de Futebol · Temporada 2026/27</h1>
+  <div class="sub">Rankings por time nas 5 grandes ligas europeias</div>
+</header>
+<div class="abas" id="ligas"></div>
+<div class="abas metricas" id="metricas"></div>
+<main>
+  <table><thead><tr><th>#</th><th>Time</th><th class="num">Jogos</th><th class="num">Total</th><th class="num">Média/jogo</th><th style="width:30%"></th></tr></thead><tbody id="corpo"></tbody></table>
+  <aside id="lado"></aside>
+</main>
+<div class="rodape">Fonte: football-data.co.uk · Atualizado em 16/11/2026 18:51</div>
+<script>
+  const ligas = { "premier-league": "Premier League", "la-liga": "La Liga", "serie-a": "Serie A", "bundesliga": "Bundesliga", "ligue-1": "Ligue 1" };
+  const metricas = { goalsFor: "Gols marcados", goalsAgainst: "Gols sofridos", shotsOnTarget: "Chutes no alvo", yellowCards: "Cartões amarelos", redCards: "Cartões vermelhos" };
+  const estado = { liga: "premier-league", metrica: "goalsFor" };
+
+  function abas(id, opcoes, chave) {
+    const el = document.getElementById(id);
+    el.innerHTML = "";
+    for (const [slug, nome] of Object.entries(opcoes)) {
+      const b = document.createElement("button");
+      b.textContent = nome;
+      if (estado[chave] === slug) b.className = "ativo";
+      b.onclick = () => { estado[chave] = slug; render(); };
+      el.append(b);
+    }
+  }
+
+  function render() {
+    abas("ligas", ligas, "liga");
+    abas("metricas", metricas, "metrica");
+    const linhas = DADOS[estado.liga][estado.metrica];
+    const max = Math.max(...linhas.map((l) => l.average), 0.01);
+    document.getElementById("corpo").innerHTML = linhas.map((l, i) => `
+      <tr class="${i < 3 ? "top" : ""}">
+        <td class="pos">${i + 1}</td><td>${l.team.name}</td>
+        <td class="num">${l.matches}</td><td class="num">${l.total}</td>
+        <td class="num">${l.average.toFixed(2)}</td>
+        <td><div class="barra" style="width:${(l.average / max) * 100}%"></div></td>
+      </tr>`).join("");
+    const lider = linhas[0];
+    document.getElementById("lado").innerHTML = `
+      <h2>Líder em ${metricas[estado.metrica].toLowerCase()}</h2>
+      <div class="destaque">${lider.team.name}</div>
+      <p>${lider.total} em ${lider.matches} jogos (${lider.average.toFixed(2)} por jogo)</p>
+      <h2 style="margin-top:20px">Média da liga</h2>
+      <div class="destaque" style="color:#38bdf8">${(linhas.reduce((s, l) => s + l.average, 0) / linhas.length).toFixed(2)}</div>
+      <p>por time, por jogo</p>`;
+  }
+  render();
+</script>
+</body>
+</html>
